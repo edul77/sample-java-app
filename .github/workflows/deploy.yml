@@ -43,8 +43,8 @@ jobs:
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          application_name: MyJavaApp
-          environment_name: MyJavaApp-env
+          application_name: java_app
+          environment_name: java-app
           version_label: ${{ github.run_number }}
-          region: us-west-2
+          region: us-east-1
           deployment_package: "*.jar"
