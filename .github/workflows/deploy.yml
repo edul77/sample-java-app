@@ -49,3 +49,4 @@ jobs:
           region: us-east-1
           deployment_package: "target/*.jar"
           
+          
