@@ -21,16 +21,19 @@ jobs:
 
       - name: Build with Maven
         run: mvn clean package -DskipTests=false
+             mkdir buildout
+             cp target/*.jar build/
 
       - name: Check the content of target directory
         run:  ls -al target/
+              ls -al build/
         
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
           name: java-app
-          path: target/*.jar
+          path: build/*.jar
 
   deploy:
     needs: build
@@ -51,6 +54,6 @@ jobs:
           environment_name: java-app
           version_label: ${{ github.run_number }}
           region: us-east-1
-          deployment_package: target/.*jar
+          deployment_package: build/.*jar
           
           
