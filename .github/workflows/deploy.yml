@@ -24,7 +24,7 @@ jobs:
 
       - name: create a directory and save the build artifacts
         run:   mkdir buildout
-               cp target/*.jar  build/
+               cp -R target/*.jar  buildout/
 
             
             
@@ -37,7 +37,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: java-app
-          path: build/*.jar
+          path: buildout/*.jar
 
   deploy:
     needs: build
@@ -58,6 +58,6 @@ jobs:
           environment_name: java-app
           version_label: ${{ github.run_number }}
           region: us-east-1
-          deployment_package: build/.*jar
+          deployment_package: buildout/.*jar
           
           
