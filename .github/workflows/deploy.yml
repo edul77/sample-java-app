@@ -48,6 +48,6 @@ jobs:
           environment_name: java-app
           version_label: ${{ github.run_number }}
           region: us-east-1
-          deployment_package: "target/*.jar"
+          deployment_package: "*.jar"
           
           
