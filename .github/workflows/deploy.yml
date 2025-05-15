@@ -24,7 +24,7 @@ jobs:
 
       - name: create a directory and save the build artifacts
         run:   mkdir out
-               cp -r  target/*.jar  out/
+               cp target/*.jar  out/
 
             
             
