@@ -52,6 +52,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: java-app
+          path: out/
+        
 
       - name: Deploy to AWS Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v21
@@ -62,6 +64,6 @@ jobs:
           environment_name: java-app
           version_label: ${{ github.run_number }}
           region: us-east-1
-          deployment_package: /home/runner/work/sample-java-app/*.jar
+          deployment_package: out/*.jar
           
           
