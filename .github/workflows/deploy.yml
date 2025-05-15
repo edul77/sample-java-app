@@ -32,8 +32,8 @@ jobs:
             
             
       - name: Check the content of target directory
-        run:  ls -al target/
-              ls -al out/
+        run:  ls -al out/
+              
         
 
       - name: Upload JAR artifact
