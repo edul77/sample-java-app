@@ -36,11 +36,7 @@ jobs:
               
         
 
-      - name: Upload JAR artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: java-app
-          path: out/*.jar
+     
 
   deploy:
     needs: build
