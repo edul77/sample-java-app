@@ -62,6 +62,6 @@ jobs:
           environment_name: java-app
           version_label: ${{ github.run_number }}
           region: us-east-1
-          deployment_package: out/.*jar
+          deployment_package: /home/runner/work/sample-java-app/*.jar
           
           
