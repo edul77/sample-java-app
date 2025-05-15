@@ -23,21 +23,21 @@ jobs:
         run: mvn clean package -DskipTests=false
 
       - name: create a directory and save the build artifacts
-        run:   mkdir buildout
-               cp  target/*.jar  buildout/
+        run:   mkdir out
+               cp -r  target/*.jar  out/
 
             
             
       - name: Check the content of target directory
         run:  ls -al target/
-              ls -al build/
+              ls -al out/
         
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
           name: java-app
-          path: buildout/*.jar
+          path: out/*.jar
 
   deploy:
     needs: build
@@ -58,6 +58,6 @@ jobs:
           environment_name: java-app
           version_label: ${{ github.run_number }}
           region: us-east-1
-          deployment_package: buildout/.*jar
+          deployment_package: out/.*jar
           
           
