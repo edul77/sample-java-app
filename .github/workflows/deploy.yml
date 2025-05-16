@@ -53,6 +53,10 @@ jobs:
         with:
           name: java-app
           path: out/
+
+    -name: check the contents of out directory
+           ls -al out/
+      
         
 
       - name: Deploy to AWS Elastic Beanstalk
