@@ -1,1 +1,102 @@
 
+name: Build & Deploy Java App to AWS Elastic Beanstalk
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+
+    steps:
+    - name: Checkout code backend code
+      uses: actions/checkout@v4
+      with:
+        repository: edul77/sample-java-app
+        path: sample-java-app
+        token: ${{ secrets.PAT }} 
+
+    - name: Checkout frontend code
+      uses: actions/checkout@v3
+      with:
+        repository: edul77/angularapp
+        path: angularapp
+        token: ${{ secrets.PAT }}
+
+        
+
+  # ───────────────────────────────────────────────────
+    # Build java backend
+    # ───────────────────────────────────────────────────
+
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'  # Change if needed
+
+    - name: Build with Maven
+      run: mvn clean package
+
+
+ # ───────────────────────────────────────────────────
+    # Build Angular frontend
+ # ───────────────────────────────────────────────────
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with: { node-version: '18' }
+
+    - name: Install deps & build
+      working-directory: angularapp
+      run: |
+        npm ci
+        npm run build -- --configuration production
+
+    - name: Prepare deployment zip
+      run: |
+        mkdir deploy
+        cp target/*.jar deploy/application.jar
+        echo 'web: java -jar application.jar' > deploy/Procfile
+        zip -r app.zip deploy
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+   # ───────────────────────────────────────────────────
+    # Deploy Angular → S3
+    # ───────────────────────────────────────────────────
+    
+    - name: Sync frontend to S3
+      run: |
+        aws s3 sync angularapp/dist/ \
+          s3://${{ secrets.FRONT_END_BUC }}/ \
+          --delete --acl public-read
+
+  
+
+    - name: Upload zip to S3
+      run: |
+        aws s3 cp app.zip s3://${{ secrets.BACK_END_BUC }}/app-${{ github.run_number }}.zip
+
+    - name: Create new Elastic Beanstalk app version
+      run: |
+        aws elasticbeanstalk create-application-version \
+          --application-name ${{ secrets.EB_APP_NAME }} \
+          --version-label v-${{ github.run_number }} \
+          --source-bundle S3Bucket=${{ secrets.EB_S3_BUCKET }},S3Key=app-${{ github.run_number }}.zip
+
+    - name: Deploy to Elastic Beanstalk
+      run: |
+        aws elasticbeanstalk update-environment \
+          --environment-name ${{ secrets.EB_ENV_NAME }} \
+          --version-label v-${{ github.run_number }}
