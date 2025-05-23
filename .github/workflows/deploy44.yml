@@ -54,7 +54,7 @@ jobs:
         aws elasticbeanstalk create-application-version \
           --application-name ${{ secrets.EB_APP_NAME }} \
           --version-label v-${{ github.run_number }} \
-          --source-bundle S3Bucket=${{ secrets.EB_S3_BUCKET }},S3Key=app${{ github.run_number }}.zip
+          --source-bundle S3Bucket=${{ secrets.EB_S3_BUCKET }}
 
     - name: Initialize EB CLI and deploy
       run: |
