@@ -29,7 +29,7 @@ jobs:
         echo 'web: java -jar application.jar' > Procfile
         
         # Create zip with root-level files
-        zip -j app.zip application.jar Procfile
+        zip -j application.jar Procfile
         # Add .ebextensions if exists
         [ -d .ebextensions ] && zip -r app.zip .ebextensions/
 
