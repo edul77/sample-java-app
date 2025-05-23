@@ -25,7 +25,7 @@ jobs:
     - name: Package EB artifact
       run: |
           mkdir bundle
-          cp target/my-app.jar bundle/            # copy your built jar
+          cp target/*.jar bundle/            # copy your built jar
           cd bundle
           zip -r ../app.zip .                     # zip the JAR as top‐level file
           
