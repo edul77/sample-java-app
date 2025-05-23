@@ -47,8 +47,8 @@ jobs:
           --version-label v-${{ github.run_number }} \
           --source-bundle S3Bucket=${{ secrets.EB_S3_BUCKET }},S3Key=app-${{ github.run_number }}.zip
 
-    - name: Deploy to Elastic Beanstalk
+    - name: Initialize EB CLI and deploy
       run: |
-        aws elasticbeanstalk update-environment \
-          --environment-name ${{ secrets.EB_ENV_NAME }} \
-          --version-label v-${{ github.run_number }}
+          eb init your-app-name --platform "Java 17 running on 64bit Amazon Linux 2" --region us-east-1
+          eb use java_backend
+          eb deploy 
