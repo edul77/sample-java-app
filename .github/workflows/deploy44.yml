@@ -17,17 +17,21 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '17'  # Change if needed
+        java-version: '17'
 
     - name: Build with Maven
       run: mvn clean package
 
-    - name: Prepare deployment zip
+    - name: Prepare deployment bundle
       run: |
-        mkdir deploy
-        cp target/*.jar deploy/application.jar
-        echo 'web: java -jar application.jar' > deploy/Procfile
-        zip -r app.zip deploy
+        # Copy JAR to root and create Procfile
+        cp target/*.jar application.jar
+        echo 'web: java -jar application.jar' > Procfile
+        
+        # Create zip with root-level files
+        zip -j app.zip application.jar Procfile
+        # Add .ebextensions if exists
+        [ -d .ebextensions ] && zip -r app.zip .ebextensions/
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -35,61 +39,38 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
-        application_name: java_app
-        environment_name: java
-       
 
     - name: Upload zip to S3
       run: |
-        aws s3 cp app.zip s3://${{ secrets.EB_S3_BUCKET }}/java_app${{ github.run_number }}.zip
-
+        aws s3 cp app.zip s3://${{ secrets.EB_S3_BUCKET }}/java_app-${{ github.run_number }}.zip
 
     - name: Install AWS EB CLI
       run: |
-          pip install --upgrade pip
-          pip install awsebcli
+        pip install --upgrade pip
+        pip install awsebcli
 
     - name: Create new Elastic Beanstalk app version
       run: |
         aws elasticbeanstalk create-application-version \
           --application-name ${{ secrets.EB_APP_NAME }} \
           --version-label v-${{ github.run_number }} \
-          --source-bundle S3Bucket=${{ secrets.EB_S3_BUCKET }},S3Key=java_app${{ github.run_number }}.zip
+          --source-bundle S3Bucket=${{ secrets.EB_S3_BUCKET }},S3Key=java_app-${{ github.run_number }}.zip
 
-    - name: Initialize EB CLI and deploy
+    - name: Initialize EB CLI
       run: |
-          eb init java-app --platform "64bit Amazon Linux 2023 v4.5.2 running Corretto 21" --region us-east-1
+        eb init ${{ secrets.EB_APP_NAME }} \
+          --platform "64bit Amazon Linux 2023 v4.5.2 running Corretto 21" \
+          --region ${{ secrets.AWS_REGION }}
 
-    - name: Delete EB environment if it exists
+    - name: Cleanup existing environment
       run: |
-       ENV_NAME="java"
-       APP_NAME="java-app"
-       REGION="us-east-1"
+        if eb status java | grep -q 'Environment details'; then
+          eb terminate java --force
+          sleep 120  # Wait for environment termination
+        fi
 
-       echo "Checking if environment '$ENV_NAME' exists..."
-       ENV_EXISTS=$(aws elasticbeanstalk describe-environments \
-       --application-name "$APP_NAME" \
-       --environment-names "$ENV_NAME" \
-       --region "$REGION" \
-       --query "Environments[?Status!='Terminated'].EnvironmentName" \
-       --output text)
-
-       if [[ "$ENV_EXISTS" == "$ENV_NAME" ]]; then
-       echo "Environment exists. Terminating..."
-       aws elasticbeanstalk terminate-environment \
-        --environment-name "$ENV_NAME" \
-        --region "$REGION" \
-        --no-wait
-       else
-       echo "Environment does not exist or is already terminated."
-       fi
-
-
-          
-          
-          eb create java \
-            --single \
-            --instance_type t3.small \
-            --cname your-env-cname \
-            --timeout 20
-          eb deploy 
+    - name: Deploy new version
+      run: |
+        eb deploy java \
+          --version v-${{ github.run_number }} \
+          --timeout 20
