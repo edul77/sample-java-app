@@ -1,11 +1,10 @@
-
 name: Build & Deploy Java App to AWS Elastic Beanstalk
 
 on:
   push:
     branches:
       - main
-      - master
+      
 
 
 jobs:
@@ -21,14 +20,7 @@ jobs:
         path: sample-java-app
         token: ${{ secrets.PAT }} 
 
-    - name: Checkout frontend code
-      uses: actions/checkout@v3
-      with:
-        repository: edul77/angularapp
-        path: angularapp
-        token: ${{ secrets.PAT }}
-
-        
+    
 
   # ───────────────────────────────────────────────────
     # Build java backend
@@ -45,18 +37,10 @@ jobs:
 
 
  # ───────────────────────────────────────────────────
-    # Build Angular frontend
+    # Build Java backend
  # ───────────────────────────────────────────────────
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with: { node-version: '18' }
-
-    - name: Install deps & build
-      working-directory: angularapp
-      run: |
-        npm ci
-        npm run build -- --configuration production
+    
 
     - name: Prepare deployment zip
       run: |
@@ -73,17 +57,10 @@ jobs:
         aws-region: ${{ secrets.AWS_REGION }}
 
    # ───────────────────────────────────────────────────
-    # Deploy Angular → S3
+    # Deploy Backend  → S3
     # ───────────────────────────────────────────────────
     
-    - name: Sync frontend to S3
-      run: |
-        aws s3 sync angularapp/dist/ \
-          s3://${{ secrets.FRONT_END_BUC }}/ \
-          --delete --acl public-read
-
   
-
     - name: Upload zip to S3
       run: |
         aws s3 cp app.zip s3://${{ secrets.BACK_END_BUC }}/app-${{ github.run_number }}.zip
@@ -99,4 +76,4 @@ jobs:
       run: |
         aws elasticbeanstalk update-environment \
           --environment-name ${{ secrets.EB_ENV_NAME }} \
-          --version-label v-${{ github.run_number }}
+          --version-label v-${{ github.run_number 
