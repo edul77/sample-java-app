@@ -37,10 +37,11 @@ jobs:
         aws-region: ${{ secrets.AWS_REGION }}
         application_name: java_app
         environment_name: java
+        version_label: "build-${{ github.run_number }}"
 
     - name: Upload zip to S3
       run: |
-        aws s3 cp app.zip s3://${{ secrets.EB_S3_BUCKET }}/app-${{ github.run_number }}.zip
+        aws s3 cp app.zip s3://${{ secrets.EB_S3_BUCKET }}/${{ version_label }}.zip
 
 
     - name: Install AWS EB CLI
