@@ -56,5 +56,4 @@ jobs:
     - name: Initialize EB CLI and deploy
       run: |
           eb init java-app --platform "64bit Amazon Linux 2023 v4.5.2 running Corretto 21" --region us-east-1
-          eb use java_backend
           eb deploy 
