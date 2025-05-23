@@ -35,6 +35,8 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
+        application_name: java_app
+        environment_name: java
 
     - name: Upload zip to S3
       run: |
@@ -56,5 +58,5 @@ jobs:
     - name: Initialize EB CLI and deploy
       run: |
           eb init java-app --platform "64bit Amazon Linux 2023 v4.5.2 running Corretto 21" --region us-east-1
-          eb use my-env-name --region us-east-1
+          eb use java --region us-east-1
           eb deploy 
