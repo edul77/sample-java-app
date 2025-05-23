@@ -90,6 +90,6 @@ jobs:
           eb create java \
             --single \
             --instance_type t3.small \
-            --cname java_backend \
+            --cname your-env-cname \
             --timeout 20
           eb deploy 
