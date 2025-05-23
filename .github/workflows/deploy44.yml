@@ -32,12 +32,15 @@ jobs:
     - name: Deploy to Elastic Beanstalk
       uses: einaregilsson/beanstalk-deploy@v20
       with:
-          application_name: my-eb-app
-          environment_name: my-eb-env
-          version_label: v${{ github.run_number }}
-          region: us-east-1
-          bucket_name: your-eb-bucket
-          bucket_key: app-${{ github.run_number }}.zip
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+        application_name: my-eb-app
+        nvironment_name: my-eb-env
+        version_label: v${{ github.run_number }}
+        region: us-east-1
+        bucket_name: your-eb-bucket
+        bucket_key: app-${{ github.run_number }}.zip
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
