@@ -40,6 +40,12 @@ jobs:
       run: |
         aws s3 cp app.zip s3://${{ secrets.EB_S3_BUCKET }}/app-${{ github.run_number }}.zip
 
+
+    - name: Install AWS EB CLI
+      run: |
+          pip install --upgrade pip
+          pip install awsebcli
+
     - name: Create new Elastic Beanstalk app version
       run: |
         aws elasticbeanstalk create-application-version \
