@@ -28,13 +28,21 @@ jobs:
           cp target/*.jar bundle/            # copy your built jar
           cd bundle
           zip -r ../app.zip .                     # zip the JAR as top‐level file
-          
-    - name: Deploy to Elastic Beanstalk
-      uses: einaregilsson/beanstalk-deploy@v20
+
+
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
+        application_name: java_app
+        environment_name: java
+          
+    - name: Deploy to Elastic Beanstalk
+      uses: einaregilsson/beanstalk-deploy@v20
+      with:
         application_name: my-eb-app
         nvironment_name: my-eb-env
         version_label: v${{ github.run_number }}
