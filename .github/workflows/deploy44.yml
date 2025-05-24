@@ -41,7 +41,7 @@ jobs:
 
     - name: Upload zip to S3
       run: |
-        aws s3 cp app.zip s3://${{ secrets.EB_S3_BUCKET }}/java_app${{ github.run_number }}.zip
+        aws s3 cp app.zip s3://${{ secrets.EB_S3_BUCKET }}/java-app${{ github.run_number }}.zip
 
 
     - name: Install AWS EB CLI
