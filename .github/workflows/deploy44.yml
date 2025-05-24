@@ -47,7 +47,7 @@ jobs:
     
       - name: Upload zip to S3
         run: |
-          aws s3 cp app.zip s3://${{ secrets.EB_S3_BUCKET }}/javaapp-new${{ github.run_number }}.zip
+          aws s3 cp app.zip s3://${{ secrets.EB_S3_BUCKET }}/java${{ github.run_number }}.zip
     
       - name: Install AWS EB CLI
         run: |
@@ -59,14 +59,14 @@ jobs:
           aws elasticbeanstalk create-application-version \
             --application-name ${{ secrets.EB_APP_NAME }} \
             --version-label v-${{ github.run_number }} \
-            --source-bundle S3Bucket=${{ secrets.EB_S3_BUCKET }},S3Key=javaapp-new${{ github.run_number }}.zip
+            --source-bundle S3Bucket=${{ secrets.EB_S3_BUCKET }},S3Key=jav${{ github.run_number }}.zip
     
       - name: Initialize EB CLI and deploy
         run: |
           eb init java-app \
             --platform "64bit Amazon Linux 2023 v4.5.2 running Corretto 21" \
             --region us-east-1
-          eb create java \
+          eb create java-env \
             --single \
             --instance_type t3.small \
             --cname your-env-cname \
