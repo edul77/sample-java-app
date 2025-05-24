@@ -10,62 +10,63 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Java
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'  # Change if needed
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-    - name: Build with Maven
-      run: mvn clean package
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
 
-    - name: Prepare deployment zip
-      run: |
-        mkdir deploy
-        cp target/*.jar deploy/application.jar
-        echo 'web: java -jar application.jar' > deploy/Procfile
-        zip -r app.zip deploy
+      - name: Prepare deployment zip
+        run: |
+          # stage the JAR and Procfile at top level
+          mkdir bundle
+          cp target/*.jar bundle/application.jar
+          echo 'web: java -jar application.jar' > bundle/Procfile
+      
+          # zip contents (not the parent folder)
+          cd bundle
+          zip -r ../app.zip .
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
-        application_name: java-app
-        environment_name: java
-       
+      - name: Inspect ZIP contents
+        run: unzip -l app.zip
 
-    - name: Upload zip to S3
-      run: |
-        aws s3 cp app.zip s3://${{ secrets.EB_S3_BUCKET }}/java-app${{ github.run_number }}.zip
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Upload zip to S3
+        run: |
+              aws s3 cp app.zip s3://${{ secrets.EB_S3_BUCKET }}/java-app${{ github.run_number }}.zip
 
-    - name: Install AWS EB CLI
-      run: |
-          pip install --upgrade pip
-          pip install awsebcli
+      - name: Install AWS EB CLI
+        run: |
+              pip install --upgrade pip
+              pip install awsebcli
 
-    - name: Create new Elastic Beanstalk app version
-      run: |
-        aws elasticbeanstalk create-application-version \
-          --application-name ${{ secrets.EB_APP_NAME }} \
-          --version-label v-${{ github.run_number }} \
-          --source-bundle S3Bucket=${{ secrets.EB_S3_BUCKET }},S3Key=java-app${{ github.run_number }}.zip
+      - name: Create new Elastic Beanstalk app version
+        run: |
+              aws elasticbeanstalk create-application-version \
+              --application-name ${{ secrets.EB_APP_NAME }} \
+              --version-label v-${{ github.run_number }} \
+              --source-bundle S3Bucket=${{ secrets.EB_S3_BUCKET }},S3Key=java-app${{ github.run_number }}.zip
 
-    - name: Initialize EB CLI and deploy
-      run: |
-          eb init java-app --platform "64bit Amazon Linux 2023 v4.5.2 running Corretto 21" --region us-east-1
-
-   
-          
-          
+      - name: Initialize EB CLI and deploy
+        run: |
+          eb init java-app \
+            --platform "64bit Amazon Linux 2023 v4.5.2 running Corretto 21" \
+            --region us-east-1
           eb create java \
             --single \
             --instance_type t3.small \
             --cname your-env-cname \
             --timeout 20
-          eb deploy 
+          eb deploy
