@@ -12,53 +12,55 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+    
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-
+    
       - name: Build with Maven
         run: mvn clean package -DskipTests
-
+    
+      # Elastic Beanstalk error encountered:
+      # "there is no Procfile and no .jar file at root level of your source bundle"
       - name: Prepare deployment zip
         run: |
-          # stage the JAR and Procfile at top level
-          mkdir bundle
-          cp target/*.jar bundle/application.jar
-          echo 'web: java -jar application.jar' > bundle/Procfile
-      
-          # zip contents (not the parent folder)
-          cd bundle
+          # stage the JAR and Procfile at top level to resolve EB error
+          mkdir deploy
+          cp target/*.jar deploy/application.jar
+          echo 'web: java -jar application.jar' > deploy/Procfile
+    
+          # zip contents of deploy folder (not including the parent folder)
+          cd deploy
           zip -r ../app.zip .
-
+    
       - name: Inspect ZIP contents
         run: unzip -l app.zip
-
+    
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-
+    
       - name: Upload zip to S3
         run: |
-              aws s3 cp app.zip s3://${{ secrets.EB_S3_BUCKET }}/java-app${{ github.run_number }}.zip
-
+          aws s3 cp app.zip s3://${{ secrets.EB_S3_BUCKET }}/java-app${{ github.run_number }}.zip
+    
       - name: Install AWS EB CLI
         run: |
-              pip install --upgrade pip
-              pip install awsebcli
-
+          pip install --upgrade pip
+          pip install awsebcli
+    
       - name: Create new Elastic Beanstalk app version
         run: |
-              aws elasticbeanstalk create-application-version \
-              --application-name ${{ secrets.EB_APP_NAME }} \
-              --version-label v-${{ github.run_number }} \
-              --source-bundle S3Bucket=${{ secrets.EB_S3_BUCKET }},S3Key=java-app${{ github.run_number }}.zip
-
+          aws elasticbeanstalk create-application-version \
+            --application-name ${{ secrets.EB_APP_NAME }} \
+            --version-label v-${{ github.run_number }} \
+            --source-bundle S3Bucket=${{ secrets.EB_S3_BUCKET }},S3Key=java-app${{ github.run_number }}.zip
+    
       - name: Initialize EB CLI and deploy
         run: |
           eb init java-app \
