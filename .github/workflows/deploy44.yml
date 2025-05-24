@@ -60,31 +60,7 @@ jobs:
       run: |
           eb init java-app --platform "64bit Amazon Linux 2023 v4.5.2 running Corretto 21" --region us-east-1
 
-    - name: Delete EB environment if it exists
-      run: |
-       ENV_NAME="java"
-       APP_NAME="java-app"
-       REGION="us-east-1"
-
-       echo "Checking if environment '$ENV_NAME' exists..."
-       ENV_EXISTS=$(aws elasticbeanstalk describe-environments \
-       --application-name "$APP_NAME" \
-       --environment-names "$ENV_NAME" \
-       --region "$REGION" \
-       --query "Environments[?Status!='Terminated'].EnvironmentName" \
-       --output text)
-
-       if [[ "$ENV_EXISTS" == "$ENV_NAME" ]]; then
-       echo "Environment exists. Terminating..."
-       aws elasticbeanstalk terminate-environment \
-        --environment-name "$ENV_NAME" \
-        --region "$REGION" \
-        --no-wait
-       else
-       echo "Environment does not exist or is already terminated."
-       fi
-
-
+   
           
           
           eb create java \
