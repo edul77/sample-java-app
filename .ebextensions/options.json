@@ -1,0 +1,12 @@
+[
+  {
+    "Namespace": "aws:autoscaling:launchconfiguration",
+    "OptionName": "InstanceType",
+    "Value": "t3.micro"
+  },
+  {
+    "Namespace": "aws:elasticbeanstalk:application:environment",
+    "OptionName": "JAVA_OPTS",
+    "Value": "-Xms256m -Xmx512m"
+  }
+]
