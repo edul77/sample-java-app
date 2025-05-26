@@ -1,79 +1,68 @@
-name: Build & Deploy Java App to AWS Elastic Beanstalk
+name: Deploy Java App to Elastic Beanstalk
 
 on:
   push:
     branches:
       - main
-      
-
+  workflow_dispatch: # Allows manual run
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
-    
 
     steps:
-    - name: Checkout code backend code
-      uses: actions/checkout@v4
-      with:
-        repository: edul77/sample-java-app
-        path: sample-java-app
-        token: ${{ secrets.PAT }} 
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'  # change if needed
 
-  # ───────────────────────────────────────────────────
-    # Build java backend
-    # ───────────────────────────────────────────────────
+      - name: Build with Maven
+        run: mvn clean package -DskipTests  # or gradle build
 
-    - name: Set up Java
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'  # Change if needed
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Build with Maven
-      run: mvn clean package
+      - name: Create version label
+        id: version
+        run: echo "VERSION_LABEL=build-$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
 
+      - name: Upload to S3
+        run: |
+          aws s3 cp target/*.jar s3://${{ secrets.BACK_END_BUC }}/$VERSION_LABEL.jar
 
- # ───────────────────────────────────────────────────
-    # Build Java backend
- # ───────────────────────────────────────────────────
+      - name: Create new application version in Elastic Beanstalk
+        run: |
+          aws elasticbeanstalk create-application-version \
+            --application-name "${{ secrets.EB_APP_NAME }}" \
+            --version-label "$VERSION_LABEL" \
+            --source-bundle S3Bucket="${{ secrets.BACK_END_BUC }}",S3Key="$VERSION_LABEL.jar"
 
-    
+      - name: Create environment (or redeploy if exists)
+        run: |
+          ENV_EXISTS=$(aws elasticbeanstalk describe-environments \
+            --application-name "${{ secrets.EB_APP_NAME }}" \
+            --environment-names "${{ secrets.EB_ENV_NAME }}" \
+            --query "Environments[0].Status" --output text 2>/dev/null || echo "None")
 
-    - name: Prepare deployment zip
-      run: |
-        mkdir deploy
-        cp target/*.jar deploy/application.jar
-        echo 'web: java -jar application.jar' > deploy/Procfile
-        zip -r app.zip deploy
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
-
-   # ───────────────────────────────────────────────────
-    # Deploy Backend  → S3
-    # ───────────────────────────────────────────────────
-    
-  
-    - name: Upload zip to S3
-      run: |
-        aws s3 cp app.zip s3://${{ secrets.BACK_END_BUC }}/app-${{ github.run_number }}.zip
-
-    - name: Create new Elastic Beanstalk app version
-      run: |
-        aws elasticbeanstalk create-application-version \
-          --application-name ${{ secrets.EB_APP_NAME }} \
-          --version-label v-${{ github.run_number }} \
-          --source-bundle S3Bucket=${{ secrets.EB_S3_BUCKET }},S3Key=app-${{ github.run_number }}.zip
-
-    - name: Deploy to Elastic Beanstalk
-      run: |
-        aws elasticbeanstalk update-environment \
-          --environment-name ${{ secrets.EB_ENV_NAME }} \
-          --version-label v-${{ github.run_number 
+          if [[ "$ENV_EXISTS" == "None" ]]; then
+            echo "Creating new environment..."
+            aws elasticbeanstalk create-environment \
+              --application-name "${{ secrets.EB_APP_NAME }}" \
+              --environment-name "${{ secrets.EB_ENV_NAME }}" \
+              --version-label "$VERSION_LABEL" \
+              --solution-stack-name "64bit Amazon Corretto 17 running on Amazon Linux 2" \
+              --option-settings file://.ebextensions/options.json
+          else
+            echo "Updating existing environment..."
+            aws elasticbeanstalk update-environment \
+              --environment-name "${{ secrets.EB_ENVIRONMENT_NAME }}" \
+              --version-label "$VERSION_LABEL"
+          fi
