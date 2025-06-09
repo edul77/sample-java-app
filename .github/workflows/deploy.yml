@@ -66,7 +66,7 @@ jobs:
           else
             echo "Updating existing environment..."
             aws elasticbeanstalk update-environment \
-              --environment-name "${{ secrets.EB_ENVIRONMENT_NAME }}" \
+              --environment-name "${{ secrets.EB_ENV_NAME }}" \
               --version-label "$VERSION_LABEL"
           fi
 
