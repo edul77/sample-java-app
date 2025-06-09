@@ -45,7 +45,7 @@ jobs:
         run: |
          APP_NAME="${{ secrets.EB_APP_NAME }}"
          EXISTS=$(aws elasticbeanstalk describe-applications \
-         --query "Applications[?ApplicationName=='$APP_NAME'] | length(@)" \
+         --query "Applications[?ApplicationName=='$APP_NAME'] \
          --output text)
     
          if [ "$EXISTS" -eq 0 ]; then
@@ -64,7 +64,6 @@ jobs:
       - name: Create environment (or redeploy if exists)
         run: |
           ENV_EXISTS=$(aws elasticbeanstalk describe-environments \
-            --application-name "${{ secrets.EB_APP_NAME }}" \
             --environment-name "${{ secrets.EB_ENV_NAME }}" \
             --query "Environments[0].Status" --output text 2>/dev/null || echo "None")
 
