@@ -45,7 +45,7 @@ jobs:
         run: |
          APP_NAME="${{ secrets.EB_APP_NAME }}"
          EXISTS=$(aws elasticbeanstalk describe-applications \
-         --query "Applications[?ApplicationName=='$APP_NAME'] \
+         --query "Applications[?ApplicationName=='$APP_NAME']" \
          --output text)
     
          if [ "$EXISTS" -eq 0 ]; then
