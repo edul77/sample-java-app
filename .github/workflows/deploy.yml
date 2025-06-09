@@ -40,6 +40,22 @@ jobs:
         run: |
           aws s3 cp target/*.jar s3://${{ secrets.BACK_END_BUC }}/$VERSION_LABEL.jar
 
+      - name: Ensure application exists
+        run: |
+         APP_NAME="${{ secrets.EB_APP_NAME }}"
+         EXISTS=$(aws elasticbeanstalk describe-applications \
+         --query "Applications[?ApplicationName=='$APP_NAME'] | length(@)" \
+         --output text)
+    
+         if [ "$EXISTS" -eq 0 ]; then
+         echo "Creating application $APP_NAME..."
+         aws elasticbeanstalk create-application \
+         --application-name "$APP_NAME"
+         else
+         echo "Application $APP_NAME already exists."
+         fi
+
+
       - name: Create new application version in Elastic Beanstalk
         run: |
           aws elasticbeanstalk create-application-version \
