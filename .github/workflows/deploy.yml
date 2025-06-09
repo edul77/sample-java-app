@@ -57,12 +57,7 @@ jobs:
          fi
 
 
-      - name: Create new application version in Elastic Beanstalk
-        run: |
-          aws elasticbeanstalk create-application-version \
-            --application-name "${{ secrets.EB_APP_NAME }}" \
-            --version-label "$VERSION_LABEL" \
-            --source-bundle S3Bucket="${{ secrets.BACK_END_BUC }}",S3Key="$VERSION_LABEL.jar"
+     
 
       - name: Set version label
         run: echo "VERSION_LABEL=app-$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
