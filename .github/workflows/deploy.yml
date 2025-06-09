@@ -83,6 +83,7 @@ jobs:
               --version-label "$VERSION_LABEL" \
               --solution-stack-name "64bit Amazon Corretto 11 running on Amazon Linux 2"\
               --option-settings file://.ebextensions/options.json
+              
       
               
           else
