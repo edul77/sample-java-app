@@ -81,7 +81,7 @@ jobs:
               --application-name "${{ secrets.EB_APP_NAME }}" \
               --environment-name "${{ secrets.EB_ENV_NAME }}" \
               --version-label "$VERSION_LABEL" \
-              --solution-stack-name "64bit Amazon Corretto 11 running on Amazon Linux 2"\
+              --solution-stack-name "Tomcat 11 with Corretto 21 running on 64bit Amazon Linux 2023/5.6.2"\
               --option-settings file://.ebextensions/options.json
               
       
