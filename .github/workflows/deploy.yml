@@ -44,10 +44,13 @@ jobs:
         run: |
           aws elasticbeanstalk create-application-version \
             --application-name "${{ secrets.EB_APP_NAME }}" \
-            --environment-names "${{ secrets.EB_ENV_NAME }}" \
             --version-label "$VERSION_LABEL" \
             --source-bundle S3Bucket="${{ secrets.BACK_END_BUC }}",S3Key="$VERSION_LABEL.jar"
 
+      - name: Set version label
+        run: echo "VERSION_LABEL=app-$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
+
+      
       - name: Create environment (or redeploy if exists)
         run: |
           ENV_EXISTS=$(aws elasticbeanstalk describe-environments \
@@ -63,7 +66,7 @@ jobs:
               --version-label "$VERSION_LABEL" \
               --solution-stack-name "64bit Amazon Corretto 17 running on Amazon Linux 2" \
               --option-settings file://.ebextensions/options.json
-              --option-settings file://.ebextensions/01_proxy.conf
+      
               
           else
             echo "Updating existing environment..."
