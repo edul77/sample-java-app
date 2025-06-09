@@ -33,6 +33,7 @@ jobs:
       - name: Create version label
         id: version
         run: echo "VERSION_LABEL=build-$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
+        
 
       - name: Upload to S3
         run: |
