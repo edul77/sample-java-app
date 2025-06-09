@@ -57,8 +57,6 @@ jobs:
          fi
 
 
-     
-
       - name: Set version label
         run: echo "VERSION_LABEL=app-$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
 
