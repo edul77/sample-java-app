@@ -52,7 +52,7 @@ jobs:
         run: |
           ENV_EXISTS=$(aws elasticbeanstalk describe-environments \
             --application-name "${{ secrets.EB_APP_NAME }}" \
-            --environment-names "${{ secrets.EB_ENV_NAME }}" \
+            --environment-name "${{ secrets.EB_ENV_NAME }}" \
             --query "Environments[0].Status" --output text 2>/dev/null || echo "None")
 
           if [[ "$ENV_EXISTS" == "None" ]]; then
@@ -63,6 +63,8 @@ jobs:
               --version-label "$VERSION_LABEL" \
               --solution-stack-name "64bit Amazon Corretto 17 running on Amazon Linux 2" \
               --option-settings file://.ebextensions/options.json
+              --option-settings file://.ebextensions/01_proxy.conf
+              
           else
             echo "Updating existing environment..."
             aws elasticbeanstalk update-environment \
